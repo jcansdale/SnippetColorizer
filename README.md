@@ -12,7 +12,7 @@ https://github.com/dotnet/roslyn/blob/2468ad7ccb5fa5982579279454341123b20846ed/s
 
 ### How to test
 
-This project can be tested using [TestDriven.Net](https://marketplace.visualstudio.com/items?itemName=JamieCansdale.TestDrivenNet)'s `Test With > In-Proc (VS SDK)` feature. This allows code to be executed inside the current Visual Studio process, MEF services to be prototypes and calls made to services. You can download from the marketplace [here](https://marketplace.visualstudio.com/items?itemName=JamieCansdale.TestDrivenNet).
+This project can be tested using [TestDriven.Net](https://marketplace.visualstudio.com/items?itemName=JamieCansdale.TestDrivenNet)'s `Test With > In-Proc (VS SDK)` feature. This allows code to be executed inside the current Visual Studio process, MEF services to be prototyped and calls made to Visual Studio services. You can download this extension from the marketplace [here](https://marketplace.visualstudio.com/items?itemName=JamieCansdale.TestDrivenNet).
 
 ![image](https://user-images.githubusercontent.com/11719160/48125901-b3c7c700-e277-11e8-99a5-fadab6e08dcb.png)
 
