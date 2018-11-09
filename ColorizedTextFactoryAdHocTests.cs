@@ -18,24 +18,54 @@ namespace SnippetColorizer
         }
 
         [STAThread]
-        void ShowTextViewHost()
+        void ShowTextView_ExistingFile()
         {
-            var source = GetSource();
-            var host = colorizedTextFactory.CreateTextViewHost(source, "CSharp");
-            var window = new Window { Content = host.HostControl };
-            window.ShowDialog();
-        }
-
-        [STAThread]
-        void ShowTextView()
-        {
-            var source = GetSource();
-            var view = colorizedTextFactory.CreateTextView(source, "CSharp");
+            var fileName = GetFileName();
+            var source = File.ReadAllText(fileName);
+            var view = colorizedTextFactory.CreateTextView(source, fileName, "CSharp");
             var window = new Window { Content = view };
             window.ShowDialog();
         }
 
-        static string GetSource() =>
-            File.ReadAllText(new StackFrame(true).GetFileName());
+        [STAThread]
+        void ShowTextView_ReplacementFile()
+        {
+            var fileName = GetFileName();
+            var view = colorizedTextFactory.CreateTextView(ExampleSource, fileName, "CSharp");
+            var window = new Window { Content = view };
+            window.ShowDialog();
+        }
+
+        [STAThread]
+        void ShowTextView_NewFile()
+        {
+            var fileName = @"c:\new.cs";
+            var view = colorizedTextFactory.CreateTextView(ExampleSource, fileName, "CSharp");
+            var window = new Window { Content = view };
+            window.ShowDialog();
+        }
+
+        [STAThread]
+        void ShowTextViewHost_ExistingFile()
+        {
+            var fileName = GetFileName();
+            var source = File.ReadAllText(fileName);
+            var host = colorizedTextFactory.CreateTextViewHost(source, fileName, "CSharp");
+            var window = new Window { Content = host.HostControl };
+            window.ShowDialog();
+        }
+
+        static string GetFileName() => new StackFrame(true).GetFileName();
+
+        static string ExampleSource =>
+@"using System.Windows;
+
+class Foo
+{
+    void Bar()
+    {
+        new Window { Content = ""Hello, World"" }.ShowDialog();
+    }
+}";
     }
 }

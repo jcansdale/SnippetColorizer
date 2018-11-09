@@ -1,5 +1,5 @@
-﻿using System.Linq;
-using System.Reflection;
+﻿using System;
+using System.Linq;
 using System.ComponentModel.Composition;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
@@ -16,52 +16,55 @@ namespace SnippetColorizer
         readonly ITextBufferFactoryService textBufferFactory;
         readonly ITextEditorFactoryService editorFactory;
         readonly IContentTypeRegistryService contentTypeRegistry;
-        readonly object miscellaneousFilesWorkspace;
 
         [ImportingConstructor]
         public ColorizedTextFactory(
             VisualStudioWorkspace visualStudioWorkspace,
             ITextBufferFactoryService textBufferFactory,
             ITextEditorFactoryService editorFactory,
-            IContentTypeRegistryService contentTypeRegistry,
-            [Import("Microsoft.VisualStudio.LanguageServices.Implementation.ProjectSystem.MiscellaneousFilesWorkspace")]
-        object miscellaneousFilesWorkspace)
+            IContentTypeRegistryService contentTypeRegistry)
             : base(visualStudioWorkspace.Services.HostServices, WorkspaceKind.MiscellaneousFiles)
         {
             this.textBufferFactory = textBufferFactory;
             this.editorFactory = editorFactory;
             this.contentTypeRegistry = contentTypeRegistry;
-            this.miscellaneousFilesWorkspace = miscellaneousFilesWorkspace;
+
+            SetCurrentSolution(visualStudioWorkspace.CurrentSolution);
         }
 
-        public IWpfTextViewHost CreateTextViewHost(string source, string contentType)
+        public IWpfTextViewHost CreateTextViewHost(string source, string filePath, string contentType)
         {
-            var textView = CreateTextView(source, contentType);
+            var textView = CreateTextView(source, filePath, contentType);
             return editorFactory.CreateTextViewHost(textView, false);
         }
 
-        public IWpfTextView CreateTextView(string source, string contentType)
+        public IWpfTextView CreateTextView(string source, string filePath, string contentType)
         {
-            var textBuffer = CreateTextBuffer(source, contentType);
+            var textBuffer = CreateTextBuffer(source, filePath, contentType);
             return editorFactory.CreateTextView(textBuffer);
         }
 
-        public ITextBuffer CreateTextBuffer(string source, string contentType)
+        public ITextBuffer CreateTextBuffer(string source, string filePath, string contentType)
         {
             var ct = contentTypeRegistry.GetContentType(contentType);
             var textBuffer = textBufferFactory.CreateTextBuffer(source, ct);
-            var projectInfo = CreateProjectInfoForDocument(@"x:\moniker.cs");
-            OnProjectAdded(projectInfo);
-            var sourceTextContainer = textBuffer.AsTextContainer();
-            OnDocumentOpened(projectInfo.Documents.Single().Id, sourceTextContainer);
+
+            var documentId = CurrentSolution.GetDocumentIdsWithFilePath(filePath).FirstOrDefault();
+            documentId = documentId ?? CreateDocumentId(filePath);
+            OnDocumentOpened(documentId, textBuffer.AsTextContainer());
+
             return textBuffer;
         }
 
-        ProjectInfo CreateProjectInfoForDocument(string filePath)
+        DocumentId CreateDocumentId(string filePath)
         {
-            return (ProjectInfo)miscellaneousFilesWorkspace.GetType()
-                .GetMethod("CreateProjectInfoForDocument", BindingFlags.Instance | BindingFlags.NonPublic)
-                .Invoke(miscellaneousFilesWorkspace, new object[] { filePath });
+            var project = CurrentSolution.Projects.First();
+            var projectId = project.Id;
+            var documentId = DocumentId.CreateNewId(projectId, debugName: filePath);
+            var documentInfo = DocumentInfo.Create(documentId, filePath);
+            var solution = CurrentSolution.AddDocument(documentInfo);
+            SetCurrentSolution(solution);
+            return documentId;
         }
     }
 }
