@@ -39,5 +39,7 @@ namespace SnippetColorizer
             File.ReadAllText(new StackFrame(true).GetFileName());
 
         // Just a test ;-)
+
+        // Pust push
     }
 }
